@@ -1,0 +1,82 @@
+################################################################################
+#
+#                         FindSymbol - v1.0
+#                     (c) 2015 Fabian Thüring         
+#
+# This file is distributed under the MIT Open Source License. See 
+# LICENSE.TXT for details.
+#
+################################################################################
+
+_findsymbol()
+{
+    local cur prev opts popts
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    opts="-add-dirs=
+          --add-dirs= 
+          -config=
+          --config= 
+          -config-add=
+          --config-add=
+          -config-list
+          --config-list
+          -config-remove=
+          --config-remove= 
+          -demangle
+          --demangle
+          -depth=
+          --depth=
+          -dirs=
+          --dirs=
+          -help
+          --help 
+          -libs=
+          --libs= 
+          -show-stats
+          --show-stats
+          -version
+          --version"
+
+    # Complete options (-X=)
+    if [[ ${prev} == "-"* && ${cur} == "=" ]] ; then
+        compopt -o filenames
+        COMPREPLY=(*)
+        return 0
+    fi
+    
+    # Complete options (--X=)
+    if [[ ${prev} == "--"* && ${cur} == "=" ]] ; then
+        compopt -o filenames
+        COMPREPLY=(*)
+        return 0
+    fi
+    
+    # Complete options (-X=path and -X=path,path)
+    if [[ ${prev} == "=" || ${prev} == "," ]] ; then
+        # Unescape space
+        cur=${cur//\\ / }
+        
+        # Expand tilder to $HOME
+        [[ ${cur} == "~/"* ]] && cur=${cur/\~/$HOME}
+        
+        # Show completion if path exist (and escape spaces)
+        compopt -o filenames
+        local files=("${cur}"*)
+        [[ -e ${files[0]} ]] && COMPREPLY=( "${files[@]// /\ }" )
+        return 0
+    fi
+    
+    # Complete options (-X)
+    COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+    if [[ ${#COMPREPLY[@]} == 1 
+         && ${COMPREPLY[0]} != "--"*"=" 
+         && ${COMPREPLY[0]} != "-"*"=" ]] ; then
+        # If there's only one option, without =, then allow a space
+        compopt +o nospace
+    fi
+    return 0
+}
+
+complete -o nospace -F _findsymbol findsymbol

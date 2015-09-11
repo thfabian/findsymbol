@@ -34,7 +34,7 @@ The argument `-demangle` tells the program to demangle C++ mangled names in libr
 $ Symbol `QApplication::QApplication(int&, char**, int)' found in:
 $  -- /usr/lib/x86_64-linux-gnu/libQt5Widgets.so.5.2.1
 ```
-suggest we need to link against `libQt5Widgets` and hence the following compiles without errors.
+suggests we need to link against `libQt5Widgets` and hence the following compiles without errors.
 ```sh
 $ clang++ -o example -I/usr/include/qt5 -fPIC example.cpp -lQt5Widgets 
 ```
@@ -76,5 +76,12 @@ $ cmake ../
 $ make
 $ sudo make install
 ```
+
+In case you want to install the autocomplete script for command-line options, configure cmake with:
+```sh
+$ cmake -DFS_INSTALL_BASH=ON ../
+```
+By default it will install the completion script in `/etc/bash_completion.d`, this behaviour can be altered with `-DFS_INSTALL_BASH_DIR=`.
+
 ## License
 [MIT](https://opensource.org/licenses/MIT)
