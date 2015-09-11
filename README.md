@@ -1,4 +1,4 @@
-# FindSymbol - 1.0
+# FindSymbol - 1.0 [![Build Status](https://travis-ci.org/thfabian/findsymbol.svg?branch=master)](https://travis-ci.org/thfabian/findsymbol)
 FindSymbol is a tool to scan your system for specific symbols and report their location, usually archives (.a) or shared objects (.so). This is useful to resolve the location of undefined symbols during the linking phase of the compilation.
 
 ## Example
