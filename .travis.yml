@@ -28,9 +28,10 @@ before_script:
   - mkdir build
   - cd build
   - cmake ../ -DCMAKE_BUILD_TYPE=Release
+  - make
 
 script:
-   - echo "passed"
+   - echo "build passed"
 
 notifications:
   email:
