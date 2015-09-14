@@ -31,6 +31,34 @@ ObjectDump::ObjectDump(const std::string& symbol,
 {
 }
 
+/// Get Iterators for dynamic symbol table
+#if LLVM_VERSION_MAJOR >= 3 && LLVM_VERSION_MINOR >= 8
+static std::pair<basic_symbol_iterator, basic_symbol_iterator>
+getDynamicSymbolIterators(SymbolicFile& Obj)
+{
+    // There seems to be a bug in getDynamicSymbolIterators as it crashes on
+    // some object files (llvm-nm shows the same behaviour)
+    // e.g llvm-nm-3.8 -D /usr/lib/llvm-3.6/lib/liblldbUtility.a
+    // results in a seg fault while earlier version and GNU just report no
+    // symbols (as expected)
+    if(const ELFObjectFileBase* ELFObject = dyn_cast<ELFObjectFileBase>(&Obj))
+    {
+        auto sym = ELFObject->getDynamicSymbolIterators();
+        return std::pair<basic_symbol_iterator, basic_symbol_iterator>(
+            sym.begin(), sym.end());
+    }
+    else
+        return std::pair<basic_symbol_iterator, basic_symbol_iterator>(
+            Obj.symbol_begin(), Obj.symbol_end());
+}
+#else
+static std::pair<symbol_iterator, symbol_iterator>
+getDynamicSymbolIterators(SymbolicFile& Obj)
+{
+    return getELFDynamicSymbolIterators(&Obj);
+}
+#endif
+
 bool ObjectDump::lookForSymbolInObject(SymbolicFile& Obj)
 {
     basic_symbol_iterator symItBegin = Obj.symbol_begin();
@@ -46,10 +74,9 @@ bool ObjectDump::lookForSymbolInObject(SymbolicFile& Obj)
         if(!Obj.isELF())
             return false;
 
-        std::pair<symbol_iterator, symbol_iterator> IDyn
-            = getELFDynamicSymbolIterators(&Obj);
-        symItBegin = IDyn.first;
-        symItEnd = IDyn.second;
+        auto dynamicIterators = ::getDynamicSymbolIterators(Obj);
+        symItBegin = dynamicIterators.first;
+        symItEnd = dynamicIterators.second;
     }
 
     // Convert all symbols in the object to NMSymbols

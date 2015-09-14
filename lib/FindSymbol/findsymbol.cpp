@@ -62,15 +62,12 @@ cl::list<std::string> Directories("dirs",
                                   cl::value_desc("dirs"),
                                   cl::CommaSeparated);
 
-// --add-dirs, -L
+// --add-dirs
 cl::list<std::string>
     AddDirectories("add-dirs",
                    cl::desc("Add specified directories to the searched ones"),
                    cl::value_desc("dirs"),
                    cl::CommaSeparated);
-cl::alias AddDirectoriesA("L",
-                          cl::desc("Alias for '--add-dirs'"),
-                          cl::aliasopt(AddDirectories));
 
 // --depth
 cl::opt<int> RecursionDepth("depth",
@@ -125,19 +122,22 @@ int main(int argc, char* argv[])
     // Print a stack trace if we signal out
     sys::PrintStackTraceOnErrorSignal();
     PrettyStackTraceProgram trace(argc, argv);
-
+    
     // Call llvm_shutdown() on exit.
     llvm_shutdown_obj shutdown;
 
     // Parse CommandLine options
+#if LLVM_VERSION_MAJOR >= 3 && LLVM_VERSION_MINOR >= 7
+    StringMap<cl::Option*>& map = cl::getRegisteredOptions();
+#else
     StringMap<cl::Option*> map;
     cl::getRegisteredOptions(map);
+#endif
 
     for(auto& m : map)
         m.getValue()->setHiddenFlag(cl::Hidden);
 
     // Reenable desired options
-
     map["help"]->setHiddenFlag(cl::NotHidden);
     map["help"]->setDescription("Display this information");
     map["version"]->setHiddenFlag(cl::NotHidden);
@@ -153,6 +153,16 @@ int main(int argc, char* argv[])
     map["depth"]->setHiddenFlag(cl::NotHidden);
     map["add-dirs"]->setHiddenFlag(cl::NotHidden);
 
+    // LLVM 3.7 >= always wants to sneak in -help-list which also can't be 
+    // disable. Hence, we swap it with -help.    
+    if(map.count("help-list") > 0)
+    {
+        map["help"]->setHiddenFlag(cl::Hidden);
+        map["help"]->setArgStr("h");
+        map["help-list"]->setDescription("Display this information");
+        map["help-list"]->setArgStr("help");
+    }
+    
     cl::SetVersionPrinter(printVersion);
     cl::ParseCommandLineOptions(argc, argv);
 

@@ -15,6 +15,14 @@ if(CMAKE_MAJOR_VERSION GREATER 2)
     cmake_policy(SET CMP0054 OLD)
 endif()
 
+macro(eval_condition name)
+   if(${ARGN})
+     set(${name} 1)
+   else(${ARGN})
+     set(${name} 0)
+   endif(${ARGN})
+endmacro(eval_condition)
+
 ################################################################################
 # Compiler Flags
 ################################################################################
@@ -87,6 +95,12 @@ if(FS_PROFILE_GPROF)
     endif()
 endif(FS_PROFILE_GPROF)
 
+# Compile single threaded
+if(FS_SINGLE_THREAD)
+    add_definitions(-DFS_SINGLE_THREAD)
+endif(FS_SINGLE_THREAD)
+
+
 ################################################################################
 # Find LLVM
 ################################################################################
@@ -95,6 +109,11 @@ if(LLVM_FOUND)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${LLVM_CXXFLAGS}")
     include_directories(${LLVM_INCLUDE_DIRS})
     link_directories(${LLVM_LIBRARY_DIRS})
+    
+    string(FIND ${CMAKE_CXX_FLAGS} "-fno-rtti" LLVM_RTTI)
+    string(FIND ${CMAKE_CXX_FLAGS} "-fno-exceptions" LLVM_EXCEPTIONS)
+    eval_condition(LLVM_HAS_RTTI NOT ${LLVM_RTTI} GREATER 0)
+    eval_condition(LLVM_HAS_EXCEPTIONS NOT ${LLVM_EXCEPTIONS} GREATER 0)
 endif(LLVM_FOUND)
 
 if(FS_PROFILE_GPROF)
@@ -108,6 +127,11 @@ find_package(TBB REQUIRED)
 if(TBB_FOUND)
     include_directories(${TBB_INCLUDE_DIRS})
     link_directories(${TBB_LIBRARY_DIRS})
+
+    # TBB can only deal with exceptions if RTTI is enabled
+    if(${LLVM_HAS_EXCEPTIONS} AND NOT ${LLVM_HAS_RTTI})
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -fno-exceptions")
+    endif()
 endif()
 
 ################################################################################

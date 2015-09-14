@@ -15,6 +15,7 @@
 #include "findsymbol/Support/Warning.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/raw_os_ostream.h"
+#include "tbb/task_scheduler_init.h"
 
 using namespace llvm;
 using namespace findsymbol;
@@ -41,6 +42,10 @@ Driver::Driver(const std::vector<std::string>& entryPoints,
     }
     else
     {
+#ifdef FS_SINGLE_THREAD
+        tbb::task_scheduler_init scheduler(1);
+#endif
+
         tbb::task_list rootTaskList;
         for(const auto& libs : entryPoints)
         {

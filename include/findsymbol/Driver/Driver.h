@@ -41,7 +41,7 @@ private:
 
     /// Stats for this run
     std::shared_ptr<Stats> stats_;
-
+    
 public:
     /// Start the recursive traversal at each entry point by spwaning a task
     Driver(const std::vector<std::string>& entryPoints,

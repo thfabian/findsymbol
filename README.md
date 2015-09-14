@@ -1,4 +1,4 @@
-# FindSymbol - 1.0 [![Build Status](https://travis-ci.org/thfabian/findsymbol.svg?branch=master)](https://travis-ci.org/thfabian/findsymbol)
+# FindSymbol - 1.0
 FindSymbol is a tool to scan your system for specific symbols and report their location, usually archives (.a) or shared objects (.so). This is useful to resolve the location of undefined symbols during the linking phase of the compilation.
 
 ## Example
@@ -55,7 +55,7 @@ $ Elapsed time:             345 ms
 ```
 
 ## Installation
-FindSymol is built upon [LLVM](http://llvm.org/) (3.6) with further dependencies on:
+FindSymol is built upon [LLVM](http://llvm.org/) (3.6 or 3.7) with further dependencies on:
 * [GNU libiberty](https://code.google.com/p/toolbox-of-eric/downloads/detail?name=libiberty.tar.gz&can=2&q=)
 * [pugixml](http://pugixml.org/)
 * [Intel(R) TBB](https://www.threadingbuildingblocks.org/)
@@ -64,7 +64,7 @@ If you are using Ubuntu you can install the additional dependencies with:
 ```sh
 $ sudo apt-get install libiberty-dev libpugixml-dev libedit-dev libtbb-dev 
 ```
-For LLVM (3.6) packages take a look [here](http://llvm.org/apt/).
+For LLVM packages take a look [here](http://llvm.org/apt/).
 
 To compile the program:
 ```sh

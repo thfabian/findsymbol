@@ -20,8 +20,32 @@ using namespace findsymbol;
 using namespace llvm;
 using namespace object;
 
+#if LLVM_VERSION_MAJOR >= 3 && LLVM_VERSION_MINOR >= 8
+
 template <class ELFT>
-static char checkForGlobalTextSymbol(ELFObjectFile<ELFT>& Obj,
+static bool checkForGlobalTextSymbol(ELFObjectFile<ELFT>& Obj,
+                                     basic_symbol_iterator I)
+{
+    symbol_iterator SymI(I);
+
+    ErrorOr<elf_section_iterator> SecIOrErr = SymI->getSection();
+    if(SecIOrErr.getError())
+        return false;
+
+    elf_section_iterator SecI = *SecIOrErr;
+
+    if(SecI != Obj.section_end() && (SecI->getType() == ELF::SHT_PROGBITS
+                                     || SecI->getType() == ELF::SHT_DYNAMIC)
+       && SecI->getFlags() == (ELF::SHF_ALLOC | ELF::SHF_EXECINSTR))
+        return true;
+    else
+        return false;
+}
+
+#else
+
+template <class ELFT>
+static bool checkForGlobalTextSymbol(ELFObjectFile<ELFT>& Obj,
                                      basic_symbol_iterator I)
 {
     typedef typename ELFObjectFile<ELFT>::Elf_Sym Elf_Sym;
@@ -36,11 +60,14 @@ static char checkForGlobalTextSymbol(ELFObjectFile<ELFT>& Obj,
 
     if(ESec && (ESec->sh_type == ELF::SHT_PROGBITS
                 || ESec->sh_type == ELF::SHT_DYNAMIC)
-       && (ESec->sh_flags == ELF::SHF_ALLOC | ELF::SHF_EXECINSTR))
+       && (ESec->sh_flags == (ELF::SHF_ALLOC | ELF::SHF_EXECINSTR)))
         return true;
     else
         return false;
 }
+
+#endif
+
 
 NMSymbol::NMSymbol(SymbolicFile& obj, basic_symbol_iterator symIt)
     : isGlobalTextSymbol_(false)
@@ -54,7 +81,7 @@ NMSymbol::NMSymbol(SymbolicFile& obj, basic_symbol_iterator symIt)
 
     if(symflags & object::SymbolRef::SF_Common)
         return;
-    
+
     if(symflags & object::SymbolRef::SF_Absolute)
         return;
 
